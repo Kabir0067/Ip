@@ -1,155 +1,134 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Ищущий — обрящет 💞</title>
-  <meta name="theme-color" content="#ff6b9a" />
+  <meta name="theme-color" content="#ff6b9a">
   <style>
-    /* ===== Variables & reset ===== */
-    :root{
-      --bg1:#fff0f7; --bg2:#ffe7f1; --glow:#ff99bf; --ink:#2a2230; --muted:#6c6570;
-      --card:rgba(255,255,255,.7); --stroke:rgba(255,255,255,.55);
-      --accent:#ff4d8d; --accent-2:#ff7aa9; --ok:#2dd4bf;
-      --shadow:0 18px 60px rgba(255,77,141,.25), 0 6px 18px rgba(0,0,0,.08);
-      --radius:24px;
+    /* ===== Design Tokens ===== */
+    :root {
+      --bg1: #fff0f7; --bg2: #ffe7f1; --glow: #ff99bf; --ink: #2a2230; --muted: #6c6570;
+      --card: rgba(255,255,255,.72); --stroke: rgba(255,255,255,.55);
+      --accent: #ff4d8d; --accent-2: #ff7aa9; --radius: 26px;
+      --shadow: 0 22px 60px rgba(255,77,141,.25), 0 6px 22px rgba(0,0,0,.10);
+      --pulse: 0; --bass: 0; --tilt: 0deg; --beatScale: 1;
     }
-    @media (prefers-color-scheme: dark){
-      :root{
-        --bg1:#180c12; --bg2:#2a1522; --glow:#ff78a8; --ink:#f6eef8; --muted:#cfc6d4;
-        --card:rgba(32,19,28,.55); --stroke:rgba(255,255,255,.08);
-        --accent:#ff6aa0; --accent-2:#ff92b9; --shadow:0 18px 60px rgba(0,0,0,.45), 0 6px 18px rgba(0,0,0,.35);
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg1: #180c12; --bg2: #2a1522; --glow: #ff78a8; --ink: #f7f0f8; --muted: #d2c7d5;
+        --card: rgba(32,19,28,.55); --stroke: rgba(255,255,255,.08);
+        --accent: #ff6aa0; --accent-2: #ff92b9;
+        --shadow: 0 24px 64px rgba(0,0,0,.48), 0 8px 24px rgba(0,0,0,.36);
       }
     }
-    *,*:before,*:after{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; color:var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", sans-serif;
+    *,*:before,*:after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; color: var(--ink); font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", sans-serif;
       background:
         radial-gradient(1200px 800px at 10% 5%, var(--bg2), transparent 60%),
         radial-gradient(1000px 700px at 100% 100%, var(--bg1), transparent 70%),
         linear-gradient(180deg, var(--bg1), var(--bg2));
-      overflow-x:hidden;
+      overflow-x: hidden;
     }
 
-    /* ===== Animated backdrop (orbs + hearts) ===== */
-    .scene{position:fixed; inset:0; pointer-events:none; z-index:-2; overflow:hidden; filter:saturate(1.05)}
-    .orb{
-      position:absolute; width:60vmin; height:60vmin; border-radius:50%;
-      background:radial-gradient(circle at 30% 30%, var(--glow), transparent 60%);
-      opacity:.28; mix-blend-mode:screen; filter:blur(20px);
+    /* ===== Ambient Orbs + Pulse Glow ===== */
+    .scene {
+      position: fixed; inset: 0; pointer-events: none; z-index: -3; overflow: hidden; filter: saturate(1.06);
+    }
+    .orb {
+      position: absolute; width: 64vmin; height: 64vmin; border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, var(--glow), transparent 60%);
+      opacity: calc(.18 + var(--pulse)*.22); mix-blend-mode: screen; filter: blur(22px);
       animation: float 22s ease-in-out infinite;
+      transform: translateZ(0) scale(calc(1 + var(--bass)*.08));
     }
-    .orb.o1{top:-15vmin; left:-10vmin; animation-delay:-4s}
-    .orb.o2{bottom:-18vmin; right:-12vmin; animation-delay:-9s}
-    .orb.o3{top:40%; left:60%; width:40vmin; height:40vmin; opacity:.35; animation-delay:-14s}
+    .orb.o1 { top: -12vmin; left: -14vmin; animation-delay: -4s; }
+    .orb.o2 { bottom: -18vmin; right: -12vmin; animation-delay: -9s; }
+    .orb.o3 { top: 42%; left: 62%; width: 44vmin; height: 44vmin; opacity: .3; animation-delay: -14s; }
+    @keyframes float { 50% { transform: translateY(-16px) translateX(10px); } }
 
-    @keyframes float{ 50%{ transform:translateY(-18px) translateX(8px) } }
+    /* ===== Heart Particles Canvas ===== */
+    canvas#hearts { position: fixed; inset: 0; z-index: -2; pointer-events: none; filter: blur(.15px); }
 
-    /* Soft heart particles (canvas sits under content) */
-    canvas#hearts{position:fixed; inset:0; z-index:-1; pointer-events:none; filter:blur(.2px)}
-
-    /* ===== Card ===== */
-    .wrap{
-      min-height:100dvh; display:grid; place-items:center; padding:clamp(16px,4vw,28px);
+    /* ===== Content ===== */
+    .wrap {
+      min-height: 100dvh; display: grid; place-items: center; padding: clamp(16px, 4vw, 28px);
     }
-    .card{
-      width:min(720px, 94vw);
-      background:var(--card);
-      -webkit-backdrop-filter: blur(14px) saturate(1.1);
-      backdrop-filter: blur(14px) saturate(1.1);
-      border:1px solid var(--stroke);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      position:relative; overflow:hidden;
+    .card {
+      width: min(760px, 94vw); background: var(--card);
+      backdrop-filter: blur(14px) saturate(1.06);
+      border: 1px solid var(--stroke); border-radius: var(--radius); box-shadow: var(--shadow);
+      position: relative; overflow: hidden;
+      transform: perspective(1200px) rotateY(var(--tilt)) scale(var(--beatScale));
+      transition: transform .08s linear, box-shadow .2s ease;
     }
-    .card:before{
-      content:""; position:absolute; inset:-2px; border-radius:inherit;
-      background: conic-gradient(from 180deg at 50% 50%, transparent 0 65%, rgba(255,255,255,.18) 75%, transparent 85% 100%);
+    .card:before {
+      content: ""; position: absolute; inset: -2px; border-radius: inherit;
+      background: conic-gradient(from 180deg at 50% 50%, transparent 0 65%, rgba(255,255,255,.22) 75%, transparent 85% 100%);
       mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-      padding:1px; opacity:.6; pointer-events:none;
+      padding: 1px; opacity: calc(.4 + var(--pulse)*.45); pointer-events: none;
+      filter: drop-shadow(0 10px 22px rgba(0,0,0,.12));
     }
-    .card-inner{ padding:clamp(22px, 4.6vw, 36px); text-align:center }
-    .badge{
-      display:inline-flex; gap:.5rem; align-items:center;
-      padding:.45rem .8rem; border-radius:999px;
-      background:rgba(255,255,255,.55); border:1px dashed var(--stroke);
-      color:#b03c6b; font-weight:700; font-size:clamp(12px,2.7vw,13px);
+    .card-inner { padding: clamp(24px, 4.6vw, 40px); text-align: center; }
+    .badge {
+      display: inline-flex; gap: .55rem; align-items: center;
+      padding: .48rem .85rem; border-radius: 999px;
+      background: rgba(255,255,255,.55); border: 1px dashed var(--stroke);
+      color: #b03c6b; font-weight: 800; font-size: clamp(12px, 2.7vw, 13px);
+      box-shadow: 0 6px 18px rgba(255,77,141,.18);
     }
-
-    h1{
-      margin:.7rem 0 .4rem; line-height:1.1;
-      font-size:clamp(26px, 7vw, 44px);
+    h1 {
+      margin: .8rem 0 .45rem; line-height: 1.08;
+      font-size: clamp(28px, 7.5vw, 46px);
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      -webkit-background-clip:text; background-clip:text; color:transparent;
-      letter-spacing:.2px; font-weight:900;
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      letter-spacing: .2px; font-weight: 900;
+      text-shadow: 0 0 calc(10px + 20px*var(--bass)) rgba(255,109,156,.25);
     }
-    p{
-      margin:.35rem auto 1.1rem; max-width:60ch; line-height:1.6;
-      font-size:clamp(14px, 3.7vw, 17px); color:var(--muted);
-    }
-
-    .cta{
-      display:flex; gap:10px; justify-content:center; flex-wrap:wrap;
-      margin-top:clamp(10px, 2vw, 14px);
-    }
-    .btn{
-      --pad: clamp(12px, 3.5vw, 16px);
-      display:inline-flex; align-items:center; justify-content:center; gap:.6rem;
-      padding:var(--pad) clamp(16px,4.5vw,22px);
-      border-radius:14px; border:0; cursor:pointer; text-decoration:none;
-      font-weight:900; letter-spacing:.25px; color:#fff;
-      background:
-        radial-gradient(60% 100% at 50% 0%, rgba(255,255,255,.3), transparent 40%),
-        linear-gradient(135deg, var(--accent), var(--accent-2));
-      box-shadow:0 14px 36px rgba(255,77,141,.32);
-      transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
-      will-change: transform;
-      touch-action: manipulation;
-    }
-    .btn:active{ transform:translateY(1px) scale(.99) }
-    .btn.ghost{
-      background:transparent; color:var(--accent);
-      border:1.5px solid rgba(255,109,156,.45);
-      box-shadow:none;
-    }
-    .sub{
-      margin-top:.7rem; font-size:clamp(11px,3.2vw,13px); opacity:.8;
+    p {
+      margin: .35rem auto 1.1rem; max-width: 60ch; line-height: 1.65;
+      font-size: clamp(14px, 3.7vw, 17px); color: var(--muted);
     }
 
-    /* Decorative heart corners */
-    .corner{
-      position:absolute; width:88px; aspect-ratio:1; opacity:.15; filter:drop-shadow(0 10px 20px rgba(0,0,0,.12));
+    /* ===== Decorative Hearts ===== */
+    .corner {
+      position: absolute; width: 92px; aspect-ratio: 1; opacity: calc(.12 + var(--pulse)*.2);
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,.12));
     }
-    .corner.tl{top:-6px; left:-6px; transform:rotate(-12deg)}
-    .corner.br{right:-8px; bottom:-10px; transform:rotate(18deg)}
+    .corner.tl { top: -6px; left: -6px; transform: rotate(-12deg); }
+    .corner.br { right: -8px; bottom: -10px; transform: rotate(18deg); }
+    .heart { position: relative; width: 100%; height: 100%; }
+    .heart:before, .heart:after {
+      content: ""; position: absolute; width: 52%; height: 80%;
+      background: linear-gradient(180deg, var(--accent-2), transparent 80%);
+      border-radius: 40% 40% 0 0; transform-origin: bottom center;
+      filter: drop-shadow(0 8px 18px rgba(255,77,141,.25));
+    }
+    .heart:before { left: 25%; top: 20%; rotate: 45deg; }
+    .heart:after { left: 23%; top: 20%; rotate: -45deg; }
 
-    /* Heart shape using CSS only */
-    .heart{ position:relative; width:100%; height:100% }
-    .heart:before, .heart:after{
-      content:""; position:absolute; width:52%; height:80%; background:linear-gradient(180deg, var(--accent-2), transparent 80%);
-      border-radius:40% 40% 0 0; transform-origin:bottom center;
+    /* ===== Toast Notification ===== */
+    .toast {
+      position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%) translateY(18px);
+      background: #1a1a1a; color: #fff; padding: .65rem .9rem; border-radius: 12px;
+      font-size: 13px; box-shadow: 0 10px 24px rgba(0,0,0,.25);
+      opacity: 0; transition: all .25s ease; z-index: 6;
     }
-    .heart:before{ left:25%; top:20%; rotate:45deg }
-    .heart:after { left:23%; top:20%; rotate:-45deg }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* Motion preferences */
-    @media (prefers-reduced-motion: reduce){
-      .orb, #hearts{ animation:none; }
+    /* ===== Reduced Motion ===== */
+    @media (prefers-reduced-motion: reduce) {
+      .orb, #hearts, .card { animation: none; transition: none; }
     }
-
-    /* Small helper toast */
-    .toast{
-      position:fixed; left:50%; bottom:16px; transform:translateX(-50%) translateY(18px);
-      background:#1a1a1a; color:#fff; padding:.65rem .9rem; border-radius:12px; font-size:13px;
-      box-shadow:0 10px 24px rgba(0,0,0,.25); opacity:0; transition:all .25s ease; z-index:5;
-    }
-    .toast.show{ opacity:1; transform:translateX(-50%) translateY(0) }
   </style>
 </head>
 <body>
-  <!-- dreamy background -->
+  <!-- ===== Audio with Autoplay ===== -->
+  <audio id="bg-music" src="Miyagi_Endshpil_Melodrama_bomba.mp3" autoplay loop playsinline aria-label="Фоновая музыка"></audio>
+
+  <!-- ===== Ambient Background ===== -->
   <div class="scene" aria-hidden="true">
     <div class="orb o1"></div>
     <div class="orb o2"></div>
@@ -157,124 +136,236 @@
   </div>
   <canvas id="hearts" aria-hidden="true"></canvas>
 
+  <!-- ===== Content ===== -->
   <main class="wrap">
     <section class="card" role="region" aria-labelledby="ttl">
       <div class="corner tl"><div class="heart"></div></div>
       <div class="corner br"><div class="heart"></div></div>
-
       <div class="card-inner">
         <span class="badge">💖 Любовь + уважение</span>
         <h1 id="ttl">Ищущий — обрящет, ХОЛА! 😉💘</h1>
-        <p>
-          Спасибо за согласие. Это красивый и уверенный шаг — я всегда с уважением к тебе.
-          Если захочешь — всегда можешь передумать. Если хочешь, разблокируй меня 😊.
-        </p>
-      </div>
+        <p>Спасибо за согласие. Это красивый и уверенный шаг — я всегда с уважением к тебе. Если захочешь — всегда можешь передумать. Если хочешь, разблокируй меня 😊.</p>
+
     </section>
   </main>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script>
-    // ===== Tiny toast helper =====
-    function toast(msg){
+    // ===== Toast Helper =====
+    const toast = (msg) => {
       const t = document.getElementById('toast');
-      t.textContent = msg; t.classList.add('show');
-      setTimeout(()=>t.classList.remove('show'), 1800);
-    }
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2000);
+    };
 
-    // ===== Canvas hearts (lightweight particles) =====
-    (function(){
+    // ===== Super Aggressive Autoplay (with Muted Fallback) =====
+    (function () {
+      const audio = document.getElementById('bg-music');
+      let hasInteracted = false;
+      let mutedFallbackUsed = false;
+
+      const tryPlay = (unmute = false) => {
+        if (unmute && !hasInteracted) return; // Только unmute после взаимодействия
+        audio.muted = mutedFallbackUsed && !unmute; // Mute если fallback
+        audio.volume = 1.0;
+        audio.play().catch((e) => {
+          if (!mutedFallbackUsed) {
+            // Fallback: запуск на mute
+            audio.muted = true;
+            audio.play().then(() => {
+              mutedFallbackUsed = true;
+              toast('Музыка запустилась тихо — тапни для звука! 🎵');
+            }).catch(() => {
+              toast('Тапни экран для запуска музыки!');
+            });
+          }
+        });
+      };
+
+      // Проверка готовности и запуск
+      const attemptPlayback = () => {
+        if (audio.readyState >= 2) tryPlay();
+      };
+      audio.addEventListener('canplay', attemptPlayback, { once: true });
+      ['DOMContentLoaded', 'load', 'pageshow'].forEach(ev => window.addEventListener(ev, attemptPlayback, { once: false }));
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) attemptPlayback(); });
+
+      // Retry каждую секунду до успеха
+      const tick = setInterval(attemptPlayback, 800); // Ускорил retry
+      audio.addEventListener('playing', () => {
+        clearInterval(tick);
+        if (mutedFallbackUsed) toast('Звук включён! 💖');
+        else toast('Музыка запущена! 🎵');
+      }, { once: true });
+
+      // Unmute и полный play на взаимодействии
+      const handleInteraction = () => {
+        hasInteracted = true;
+        if (mutedFallbackUsed) {
+          audio.muted = false;
+          audio.volume = 1.0;
+          audio.play();
+        }
+        tryPlay(true);
+      };
+
+      // Слушаем ВСЕ возможные взаимодействия (даже микроклики)
+      ['pointerdown', 'touchstart', 'click', 'keydown', 'scroll', 'mousemove', 'pointermove', 'wheel'].forEach(ev =>
+        window.addEventListener(ev, handleInteraction, { passive: true, once: false })
+      );
+
+      // Web Audio API для анализа (с wake на взаимодействии)
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) {
+          const ctx = new AC();
+          const src = ctx.createMediaElementSource(audio);
+          const analyser = ctx.createAnalyser();
+          analyser.fftSize = 1024;
+          src.connect(analyser);
+          analyser.connect(ctx.destination);
+          window.__AUDIO_CTX__ = { ctx, analyser };
+
+          const wake = () => {
+            if (ctx.state !== 'running') ctx.resume().then(() => tryPlay(true)).catch(() => {});
+          };
+          wake(); // Попытка сразу
+          ['pointerdown', 'touchstart', 'click', 'keydown'].forEach(ev =>
+            window.addEventListener(ev, wake, { passive: true })
+          );
+        }
+      } catch (e) {
+        console.warn('Web Audio API недоступен:', e);
+      }
+
+      // Обработка ошибок
+      audio.addEventListener('error', () => {
+        toast('Ошибка с музыкой — проверь файл!');
+      });
+    })();
+
+    // ===== Rhythm-Reactive Visuals =====
+    (function () {
+      const analyserReady = () => window.__AUDIO_CTX__ && window.__AUDIO_CTX__.analyser;
+      const data = new Uint8Array(512);
+
+      function step() {
+        const root = document.documentElement;
+        let pulse = 0, bass = 0;
+
+        if (analyserReady()) {
+          const an = window.__AUDIO_CTX__.analyser;
+          an.getByteFrequencyData(data);
+          const band = (arr, a, b) => {
+            let s = 0, c = 0;
+            for (let i = a; i < b && i < arr.length; i++) { s += arr[i]; c++; }
+            return (s / (c || 1)) / 255;
+          };
+          bass = band(data, 0, 28);
+          const mid = band(data, 28, 80);
+          pulse = Math.min(1, (bass * 0.7 + mid * 0.5));
+        } else {
+          const t = performance.now() / 1000;
+          bass = (Math.sin(t * 1.3) + 1) / 4;
+          pulse = (Math.sin(t * 2.1) + 1) / 3;
+        }
+
+        root.style.setProperty('--pulse', pulse.toFixed(3));
+        root.style.setProperty('--bass', bass.toFixed(3));
+        root.style.setProperty('--beatScale', (1 + (pulse - 0.25) * 0.06).toFixed(3));
+        root.style.setProperty('--tilt', (Math.sin(performance.now() / 1200) * (0.6 + bass * 1.4)).toFixed(2) + 'deg');
+
+        requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    })();
+
+    // ===== Canvas Hearts =====
+    (function () {
       const c = document.getElementById('hearts');
       const ctx = c.getContext('2d');
       let w, h, dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      let hearts = [];
-      let last = 0;
-      let reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let hearts = [], last = 0;
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-      function resize(){
+      function resize() {
         w = c.width = Math.floor(innerWidth * dpr);
         h = c.height = Math.floor(innerHeight * dpr);
         c.style.width = innerWidth + 'px';
         c.style.height = innerHeight + 'px';
       }
-      resize(); addEventListener('resize', resize, {passive:true});
+      resize();
+      addEventListener('resize', resize, { passive: true });
 
-      function makeHeart(x, y){
-        const hue = 340 + Math.random()*20; // pinky range
+      function makeHeart(x, y, boost = 0) {
+        const hue = 340 + Math.random() * 20;
+        const size = (10 + Math.random() * 16) * (1 + boost);
         hearts.push({
-          x: x*dpr, y: y*dpr,
-          vx: (Math.random()-.5)*.2*dpr,
-          vy: -(.6 + Math.random()*.7)*dpr,
-          g: .008*dpr,
-          life: 0,
-          max: 1600 + Math.random()*600,
-          size: (10 + Math.random()*16)*dpr,
-          color: `hsla(${hue},85%,70%,`
+          x: x * dpr, y: y * dpr,
+          vx: (Math.random() - 0.5) * 0.22 * dpr,
+          vy: -(0.6 + Math.random() * 0.8 + boost * 0.6) * dpr,
+          g: 0.008 * dpr, life: 0,
+          max: 1400 + Math.random() * 700,
+          size: size * dpr, hue
         });
       }
 
-      function drawHeart(x,y,s,alpha){
+      function drawHeart(x, y, s, alpha, hue) {
         ctx.save();
-        ctx.translate(x,y);
-        ctx.scale(s/32, s/32);
+        ctx.translate(x, y);
+        ctx.scale(s / 32, s / 32);
         ctx.beginPath();
-        // Parametric heart curve ~ (classic)
-        for(let t=-Math.PI; t<=Math.PI; t+=0.1){
-          const X = 16*Math.pow(Math.sin(t),3);
-          const Y = 13*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t);
-          if(t===-Math.PI) ctx.moveTo(X,-Y); else ctx.lineTo(X,-Y);
+        for (let t = -Math.PI; t <= Math.PI; t += 0.1) {
+          const X = 16 * Math.pow(Math.sin(t), 3);
+          const Y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+          if (t === -Math.PI) ctx.moveTo(X, -Y); else ctx.lineTo(X, -Y);
         }
         ctx.closePath();
-        ctx.fillStyle = `rgba(255,120,160,${alpha})`;
+        ctx.fillStyle = `hsla(${hue}, 85%, 70%, ${alpha})`;
         ctx.fill();
         ctx.restore();
       }
 
-      function step(ts){
-        if(!last) last = ts;
-        const dt = Math.min(32, ts - last); last = ts;
+      function step(ts) {
+        if (!last) last = ts;
+        const dt = Math.min(32, ts - last);
+        last = ts;
 
-        ctx.clearRect(0,0,w,h);
-        for(let i=hearts.length-1;i>=0;i--){
+        const pulse = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pulse')) || 0;
+        if (Math.random() < 0.08 + pulse * 0.12) {
+          makeHeart(Math.random() * innerWidth, innerHeight - Math.random() * 160, pulse * 1.2);
+        }
+
+        ctx.clearRect(0, 0, w, h);
+        for (let i = hearts.length - 1; i >= 0; i--) {
           const p = hearts[i];
           p.life += dt;
           p.vy += p.g * dt;
-          p.x += p.vx * dt * .8;
-          p.y += p.vy * dt * .8;
-          const alpha = Math.max(0, 1 - p.life/p.max);
-          drawHeart(p.x, p.y, p.size, alpha*0.9);
-          if(p.life > p.max) hearts.splice(i,1);
+          p.x += p.vx * dt * 0.8;
+          p.y += p.vy * dt * 0.8;
+          const alpha = Math.max(0, 1 - p.life / p.max);
+          drawHeart(p.x, p.y, p.size, alpha * 0.9, p.hue);
+          if (p.life > p.max) hearts.splice(i, 1);
         }
         requestAnimationFrame(step);
       }
-      if(!reduce) requestAnimationFrame(step);
+      if (!reduce) requestAnimationFrame(step);
 
-      // Initial gentle sprinkle
-      function sprinkle(n){
-        for(let i=0;i<n;i++){
-          makeHeart(Math.random()*innerWidth, innerHeight - Math.random()*120);
-        }
-      }
-      if(!reduce) sprinkle(18);
-
-      // Tap/click to pop hearts
-      function burst(e){
+      function burst(e) {
         const touches = e.touches ? [...e.touches] : [e];
-        touches.forEach(t=>{
-          makeHeart(t.clientX, t.clientY);
-          makeHeart(t.clientX+12, t.clientY-8);
-          makeHeart(t.clientX-10, t.clientY-6);
+        const pulse = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--pulse')) || 0;
+        touches.forEach(t => {
+          makeHeart(t.clientX, t.clientY, 1 + pulse);
+          makeHeart(t.clientX + 12, t.clientY - 8, 0.7 + pulse);
+          makeHeart(t.clientX - 10, t.clientY - 6, 0.7 + pulse);
         });
       }
-      addEventListener('pointerdown', burst, {passive:true});
-      addEventListener('touchstart', burst, {passive:true});
+      addEventListener('pointerdown', burst, { passive: true });
+      addEventListener('touchstart', burst, { passive: true });
 
-      // CTA example hook (оставил на будущее, если добавите кнопку с id="spark")
-      document.getElementById('spark')?.addEventListener('click', (e)=>{
-        e.preventDefault();
-        sprinkle(10);
-      });
+      if (!reduce) for (let i = 0; i < 12; i++) makeHeart(Math.random() * innerWidth, innerHeight - Math.random() * 120, 0.4);
     })();
   </script>
 </body>
