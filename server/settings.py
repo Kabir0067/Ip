@@ -1,25 +1,40 @@
 from pathlib import Path
+import os
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+# Read SECRET_KEY from environment in production
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-m7@na8ezw3uc_b@hfnm#2z93e55^^1pq)p5t^5z2usd6+)s3r)')
 
-SECRET_KEY = 'django-insecure-m7@na8ezw3uc_b@hfnm#2z93e55^^1pq)p5t^5z2usd6+)s3r)'  # барои прод иваз кун
-DEBUG = False  # прод: False
-
-ALLOWED_HOSTS = []
-
-# HTTPS / proxy-aware
+# Security & deployment
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = False  # Let Vercel handle HTTPS at the edge
 
-# Барои истифодаи IP дар HTTPS
-CSRF_TRUSTED_ORIGINS = ['https://213.171.8.231']
+# Use environment variables in production
+DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in {"1", "true", "yes"}
+ALLOWED_HOSTS = os.getenv(
+    "DJANGO_ALLOWED_HOSTS",
+    ".vercel.app,localhost,127.0.0.1"
+).split(",")
+
+# CSRF trusted origins for Vercel and local
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.vercel.app",
+    "http://localhost",
+    "http://127.0.0.1",
+]
+
 
 INSTALLED_APPS = [
-    'django.contrib.admin','django.contrib.auth','django.contrib.contenttypes',
-    'django.contrib.sessions','django.contrib.messages','django.contrib.staticfiles',
-    'sipehra',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'sipehra',  
 ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -33,30 +48,46 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'server.urls'
 
-TEMPLATES = [{
-    'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    'DIRS': [BASE_DIR / 'templates'],
-    'APP_DIRS': True,
-    'OPTIONS': {
-        'context_processors': [
-            'django.template.context_processors.request',
-            'django.contrib.auth.context_processors.auth',
-            'django.contrib.messages.context_processors.messages',
-        ],
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS':[BASE_DIR/'templates'],'APP_DIRS':True,  
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
     },
-}]
+]
 
 WSGI_APPLICATION = 'server.wsgi.application'
 
 DATABASES = {
-    'default': {'ENGINE': 'django.db.backends.sqlite3','NAME': BASE_DIR / 'db.sqlite3'}
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
+# Use cookie-based sessions to avoid database writes in serverless environment
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -68,12 +99,14 @@ EMAIL_HOST_PASSWORD = 'wyde ctnn cvek dqpl'
 DEFAULT_FROM_EMAIL = 'chatgpt0067@gmail.com'
 LOVER_EMAIL = EMAIL_HOST_USER
 
+
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Asia/Dushanbe'
+TIME_ZONE = "Asia/Dushanbe"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'  
-
+STATIC_URL = "/static/"
+# Where collectstatic will output files for Vercel to serve at /static/
+STATIC_ROOT = BASE_DIR / "static"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
