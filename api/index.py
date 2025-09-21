@@ -1,7 +1,8 @@
-from vercel_wsgi import handle
-from server.wsgi import application
+import os
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "server.settings")
 
-# Vercel expects a top-level handler(request, context)
-# This adapts Django's WSGI application to Vercel's serverless function.
-def handler(request, context):
-    return handle(request, context, application)
+from vercel_wsgi import handle
+from server.wsgi import application  # wsgi.py-и Django
+
+def handler(request, response):
+    return handle(request, response, application)
